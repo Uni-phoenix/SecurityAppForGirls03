@@ -7,8 +7,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.location.SettingInjectorService;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.provider.Settings;
@@ -58,6 +60,7 @@ public class Splash_screen extends AppCompatActivity {
     }
 
     public void moveOn(){
+        Log.i(TAG,"Move On");
         final Intent i4= new Intent(Splash_screen.this,MainActivity.class);
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -90,6 +93,11 @@ public class Splash_screen extends AppCompatActivity {
                 .setPositiveButton("YES", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        //Intent i1 = new Intent(Splash_screen.this,Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        //startActivityForResult(i1);
+                        //startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        //if(Build.VERSION.SDK_INT>Build.VERSION_CODES.)
+
                         startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                         if(GPSflag&&INTERNETflag){
                             moveOn();
@@ -137,6 +145,10 @@ public class Splash_screen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+        Log.i(TAG,"OnCreate");
+        if(GPSflag&&INTERNETflag){
+            moveOn();
+        }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -175,6 +187,7 @@ public class Splash_screen extends AppCompatActivity {
 
     protected void onResume() {
         super.onResume();
+        Log.i(TAG,"OnResume");
         if(GPSflag&&INTERNETflag){
             moveOn();
         }

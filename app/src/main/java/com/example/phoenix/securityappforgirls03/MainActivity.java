@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.i(TAG,"MainActivity OnCreate");
         appDataBase = Room.databaseBuilder(getApplicationContext(),AppDataBase.class,"contact_db").build();
         new saveContact(17,"").execute();
         text_location = (TextView)findViewById(R.id.text_location);
@@ -48,6 +49,15 @@ public class MainActivity extends AppCompatActivity {
         t_contact_show = (TextView)findViewById(R.id.textView_contact);
         t_contact_show.setClickable(false);
         smsManager = SmsManager.getDefault();
+        snackBar = Snackbar.make(findViewById(R.id.layout_main_relative),"Contact not Assigned..",Snackbar.LENGTH_INDEFINITE);
+        snackBar.setAction("Assign", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i1 = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                startActivityForResult(i1,11);
+                t_contact_show.setClickable(true);
+            }
+        });
         //b_contact_picker = (Button)findViewById(R.id.button_contact_picker);
 //        b_contact_picker.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -65,15 +75,7 @@ public class MainActivity extends AppCompatActivity {
                     new FetchLocation(MainActivity.this,12).execute();
                     progressDialog.show();
                 }else{
-                    snackBar = Snackbar.make(findViewById(R.id.layout_main_relative),"Contact not Assigned..",Snackbar.LENGTH_INDEFINITE);
-                    snackBar.setAction("Assign", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent i1 = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
-                            startActivityForResult(i1,11);
-                            t_contact_show.setClickable(true);
-                        }
-                    });
+
                     snackBar.show();
                     //Toast.makeText(MainActivity.this,"Set Contact First...",Toast.LENGTH_SHORT).show();
                 }
@@ -133,14 +135,15 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG,"getContentResolver()");
                 cursor.moveToFirst();
                 Log.i(TAG,"moveToFirst");
-                Log.i(TAG,cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-                int column = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                String s = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                Log.i(TAG,s);
+                //int column = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
                 contact_flag = 1;
                 if(snackBar.isShown()){
                     snackBar.dismiss();
                 }
-                t_contact_show.setText(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-                new saveContact(16,cursor.getString(column)).execute();
+                t_contact_show.setText(s);
+                new saveContact(16,s).execute();
                 Log.i(TAG,"saveContact execute");
                 //List<Contact> tempCon =appDataBase.contactDao().getAllWord().get(0);
 //                for(Contact c: tempCon){
