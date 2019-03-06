@@ -155,7 +155,8 @@ public class Splash_screen extends AppCompatActivity {
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED ) {
             ActivityCompat.requestPermissions(Splash_screen.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.READ_CONTACTS,Manifest.permission.SEND_SMS}, 1234);
+                    Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.READ_CONTACTS,Manifest.permission.READ_SMS,
+                    Manifest.permission.RECEIVE_SMS,Manifest.permission.SEND_SMS}, 1234);
         }else{
             checkMeraGPS();
             checkInternetConnectivity();

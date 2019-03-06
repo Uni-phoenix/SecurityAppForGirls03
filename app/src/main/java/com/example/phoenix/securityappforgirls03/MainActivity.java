@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
@@ -35,12 +36,34 @@ public class MainActivity extends AppCompatActivity {
     static Snackbar snackBar;
     static SmsManager smsManager;
     static AppDataBase appDataBase;
+    static IntentFilter filter;
+    SMSReceiver smsReceiver;
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(smsReceiver,filter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //unregisterReceiver(smsReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //unregisterReceiver(smsReceiver);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        filter = new IntentFilter();
+        filter.addAction(getPackageName()+"android.provider.Telephony.SMS_RECEIVED");
+        smsReceiver = new SMSReceiver();
         Log.i(TAG,"MainActivity OnCreate");
         appDataBase = Room.databaseBuilder(getApplicationContext(),AppDataBase.class,"contact_db").build();
         new saveContact(17,"").execute();

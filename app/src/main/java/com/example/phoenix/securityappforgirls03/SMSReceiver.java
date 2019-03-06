@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.provider.Telephony;
 import android.support.v4.app.ActivityCompat;
 import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -33,18 +34,25 @@ public class SMSReceiver extends BroadcastReceiver {
     static Location location;
     public static AppDataBase appDataBase;
     public static Context cntx;
+    static String message,sender;
     @Override
     public void onReceive(Context context, Intent intent) {
+
         this.cntx = context;
-        if(intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)){
+        //if(intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION))
+        if(intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
+        {
+            Log.i(TAG,"Broadcast reciever start");
             appDataBase = Room.databaseBuilder(context,AppDataBase.class,"contact_db").build();
+            for (SmsMessage smsMessage : Telephony.Sms.Intents.getMessagesFromIntent(intent)){
+                message = smsMessage.getDisplayMessageBody();
+                sender = smsMessage.getDisplayOriginatingAddress();
+            }
             new asyncClass(21).execute();
         }
-
-
-
-
     }
+
+
     class asyncClass extends AsyncTask<Void,Void,Void>{
         int request_Code;
         //appDataBase = Room.databaseBuilder(getApplicationContext(),AppDataBase.class,"contact_db").build();
@@ -61,43 +69,52 @@ public class SMSReceiver extends BroadcastReceiver {
                     }else{
                         location = null;
                         Log.i(TAG, "doInBackground START with request_code : 21");
+                        String contact = appDataBase.contactDao().getAllWord().get(0).getContact();
 
-                        //building Location Request
-                        locationRequest = new LocationRequest();
-                        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                        locationRequest.setInterval(5000);
-                        locationRequest.setFastestInterval(3000);
-                        locationRequest.setSmallestDisplacement(10);
+                        if(contact.equals(sender)){
+                            //building Location Request
+                            locationRequest = new LocationRequest();
+                            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                            locationRequest.setInterval(5000);
+                            locationRequest.setFastestInterval(3000);
+                            locationRequest.setSmallestDisplacement(10);
 
-                        //Building fusedLocationProvider
-                        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(cntx);
+                            //Building fusedLocationProvider
+                            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(cntx);
+                            final String contact_str = appDataBase.contactDao().getAllWord().get(0).getContact();
+                            //Location Callback
+                            locationCallback = new LocationCallback(){
+                                @Override
+                                public void onLocationResult(LocationResult locationResult) {
+                                    for (Location l : locationResult.getLocations()) {
+                                        if (l == null) {
+                                            continue;
+                                        } else {
+                                            Log.i(TAG, "Starting getting Locations");
+                                            location = l;
+                                            //Log.i(TAG, "Location : " + l.getLatitude() + "," + l.getLongitude());
+                                            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
 
-                        //Location Callback
-                        locationCallback = new LocationCallback(){
-                            @Override
-                            public void onLocationResult(LocationResult locationResult) {
-                                for (Location l : locationResult.getLocations()) {
-                                    if (l == null) {
-                                        continue;
-                                    } else {
-                                        Log.i(TAG, "Starting getting Locations");
-                                        location = l;
-                                        //Log.i(TAG, "Location : " + l.getLatitude() + "," + l.getLongitude());
-                                        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+                                            SmsManager smsManager = SmsManager.getDefault();
+                                            smsManager.sendTextMessage(contact_str,null,"https://www.google.com/maps/search/?api=1&query="+l.getLatitude()+","+l.getLongitude(),null,null);
+                                            Log.i(TAG,"replying Message Send..");
+                                        }
                                     }
                                 }
+                            };
+                            if (ActivityCompat.checkSelfPermission(cntx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(cntx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                return null;
                             }
-                        };
-                        if (ActivityCompat.checkSelfPermission(cntx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(cntx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            return null;
+                            Looper looper = Looper.getMainLooper();
+                            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, looper);
+
+//                            String contact_str = appDataBase.contactDao().getAllWord().get(0).getContact();
+//                            SmsManager smsManager = SmsManager.getDefault();
+//                            smsManager.sendTextMessage(contact_str,null,"https://www.google.com/maps/search/?api=1&query="+location.getLatitude()+","+location.getLongitude(),null,null);
+//                            Log.i(TAG,"replying Message Send..");
+
+
                         }
-                        Looper looper = Looper.getMainLooper();
-                        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, looper);
-
-
-                        String contact_str = appDataBase.contactDao().getAllWord().get(0).getContact();
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(contact_str,null,"https://www.google.com/maps/search/?api=1&query="+location.getLatitude()+","+location.getLongitude(),null,null);
                     }
                     break;
             }
